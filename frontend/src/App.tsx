@@ -1,16 +1,18 @@
 import { useCallback, useState } from 'react';
 
 import ConfirmDialog from './components/ConfirmDialog';
-import DashboardStats from './components/DashboardStats';
+import DashboardView from './components/DashboardView';
 import Pagination from './components/Pagination';
+import Sidebar, { TopNav } from './components/Sidebar';
 import TaskFormModal from './components/TaskFormModal';
 import TaskList from './components/TaskList';
 import TaskToolbar from './components/TaskToolbar';
 import Toast, { type ToastMessage } from './components/Toast';
 import { useDashboard } from './hooks/useDashboard';
+import { useLatestTasks } from './hooks/useLatestTasks';
 import { useTasks } from './hooks/useTasks';
 import { createTask, deleteTask, updateTask } from './services/tasks';
-import type { Task, TaskPatch, TaskPayload } from './types';
+import type { Task, TaskPatch, TaskPayload, ViewName } from './types';
 
 interface ToastState {
   id: number;
@@ -18,7 +20,9 @@ interface ToastState {
 }
 
 export default function App() {
-  // Bumped after every mutation so the task list and dashboard refetch.
+  const [view, setView] = useState<ViewName>('dashboard');
+
+  // Bumped after every mutation so the task list, dashboard and latest feed refetch.
   const [refreshKey, setRefreshKey] = useState(0);
   const [toast, setToast] = useState<ToastState | null>(null);
 
@@ -28,6 +32,7 @@ export default function App() {
   const [deleteBusy, setDeleteBusy] = useState(false);
 
   const dashboard = useDashboard(refreshKey);
+  const latest = useLatestTasks(refreshKey, view === 'dashboard');
   const {
     filters,
     items,
@@ -90,37 +95,62 @@ export default function App() {
   const hasFilters =
     filters.search !== '' || filters.status !== '' || filters.priority !== '';
 
+  const navProps = {
+    view,
+    onViewChange: setView,
+    taskCount: dashboard.stats?.total ?? null,
+  };
+
   return (
-    <div className="mx-auto max-w-6xl px-5 pb-16 pt-8">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="m-0 font-display text-3xl font-extrabold tracking-tight">Task manager</h1>
-          <p className="m-0 mt-1 text-[15px] text-ink/70">Track, organize and finish your work.</p>
-        </div>
-        <button type="button" className="btn btn-primary" onClick={() => setCreateOpen(true)}>
-          + Add task
-        </button>
-      </header>
+    <div className="flex min-h-dvh">
+      <Sidebar {...navProps} />
 
-      <DashboardStats stats={dashboard.stats} loading={dashboard.loading} error={dashboard.error} />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <TopNav {...navProps} />
 
-      <main>
-        <TaskToolbar filters={filters} onChange={updateFilters} />
+        <main className="mx-auto w-full max-w-6xl flex-1 px-5 pb-16 pt-6 md:pt-8">
+          {view === 'dashboard' ? (
+            <DashboardView
+              stats={dashboard.stats}
+              statsLoading={dashboard.loading}
+              statsError={dashboard.error}
+              latest={latest.tasks}
+              latestLoading={latest.loading}
+              latestError={latest.error}
+              onViewAll={() => setView('tasks')}
+            />
+          ) : (
+            <>
+              <section className="mb-5 flex flex-wrap items-center justify-between gap-4">
+                <h2 className="m-0 font-display text-2xl font-extrabold tracking-tight">Tasks</h2>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setCreateOpen(true)}
+                >
+                  + Add task
+                </button>
+              </section>
 
-        <TaskList
-          tasks={items}
-          loading={loading}
-          error={error}
-          hasFilters={hasFilters}
-          onEdit={setEditingTask}
-          onDelete={setDeletingTask}
-          onReload={reload}
-          onClearFilters={() => updateFilters({ search: '', status: '', priority: '' })}
-          onCreate={() => setCreateOpen(true)}
-        />
+              <TaskToolbar filters={filters} onChange={updateFilters} />
 
-        <Pagination meta={meta} onPageChange={goToPage} />
-      </main>
+              <TaskList
+                tasks={items}
+                loading={loading}
+                error={error}
+                hasFilters={hasFilters}
+                onEdit={setEditingTask}
+                onDelete={setDeletingTask}
+                onReload={reload}
+                onClearFilters={() => updateFilters({ search: '', status: '', priority: '' })}
+                onCreate={() => setCreateOpen(true)}
+              />
+
+              <Pagination meta={meta} onPageChange={goToPage} />
+            </>
+          )}
+        </main>
+      </div>
 
       {createOpen && (
         <TaskFormModal

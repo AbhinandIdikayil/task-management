@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/*
+  Task manager — "ops board on drafting paper".
+  Ink-forward palette; chroma is reserved for semantics (task status)
+  except the indigo focus ring, which is the accent's only job.
+*/
+@theme {
+  --font-display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+
+  --color-ink: #1c2333;
+  --color-paper: #eceff2;
+
+  --color-indigo-focus: #5347ff;
+
+  --color-status-pending-bg: #fef3c7;
+  --color-status-pending-text: #b45309;
+  --color-status-pending-spine: #f59e0b;
+
+  --color-status-progress-bg: #dbeafe;
+  --color-status-progress-text: #1d4ed8;
+  --color-status-progress-spine: #2563eb;
+
+  --color-status-done-bg: #dcfce7;
+  --color-status-done-text: #15803d;
+  --color-status-done-spine: #16a34a;
+
+  --color-danger-bg: #fef2f2;
+  --color-danger-border: #fecaca;
+  --color-danger-text: #b91c1c;
+}
+
+@layer base {
+  html {
+    @apply bg-paper text-ink;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-indigo-focus);
+    outline-offset: 2px;
+  }
+
+  /* Inputs opt into their own quiet focus treatment. */
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .field-label {
+    @apply flex items-baseline justify-between gap-2 text-[13px] font-semibold;
+  }
+
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center gap-1.5
+           rounded-md border border-transparent px-4 py-2
+           text-sm font-semibold transition-colors duration-150
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-ink text-white hover:bg-ink/85;
+  }
+
+  .btn-ghost {
+    @apply border-ink/15 bg-white text-ink hover:border-ink hover:bg-ink hover:text-white;
+  }
+
+  .btn-danger-ghost {
+    @apply border-ink/15 bg-white text-rose-700 hover:border-rose-600 hover:bg-rose-600 hover:text-white;
+  }
+
+  .btn-danger {
+    @apply bg-rose-700 text-white hover:bg-rose-800;
+  }
+
+  .field-input {
+    @apply w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm
+           text-ink transition-colors placeholder:text-ink/40
+           focus:border-indigo-focus focus:ring-4 focus:ring-indigo-focus/15
+           aria-[invalid=true]:border-rose-500;
+  }
+
+  .field-error {
+    @apply m-0 text-[12.5px] text-rose-700;
+  }
+
+  .banner-error {
+    @apply mb-4 flex flex-wrap items-center justify-between gap-2.5
+           rounded-lg border border-danger-border bg-danger-bg px-4 py-3
+           text-sm text-danger-text;
+  }
+
+  .badge {
+    @apply shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap;
+  }
+
+  .badge-pending { @apply bg-status-pending-bg text-status-pending-text; }
+  .badge-in_progress { @apply bg-status-progress-bg text-status-progress-text; }
+  .badge-completed { @apply bg-status-done-bg text-status-done-text; }
+}

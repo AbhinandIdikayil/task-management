@@ -1,15 +1,14 @@
 import { LayoutDashboard, ListChecks, SquareCheck } from 'lucide-react';
-
-import type { ViewName } from '../types';
+import { NavLink } from 'react-router-dom';
 
 const NAV_ITEMS = [
-  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { key: 'tasks', label: 'Tasks', icon: ListChecks },
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/tasks', label: 'Tasks', icon: ListChecks, end: false },
 ] as const;
 
-interface NavProps {
-  view: ViewName;
-  onViewChange(view: ViewName): void;
+const TASKS_PATH = '/tasks';
+
+export interface NavProps {
   taskCount: number | null;
 }
 
@@ -43,7 +42,7 @@ function CountChip({ count, active }: { count: number | null; active: boolean })
 }
 
 /** Vertical share of the app: brand, page switcher. */
-export default function Sidebar({ view, onViewChange, taskCount }: NavProps) {
+export default function Sidebar({ taskCount }: NavProps) {
   return (
     <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-ink/10 bg-white md:flex">
       <div className="px-5 pt-6">
@@ -51,22 +50,28 @@ export default function Sidebar({ view, onViewChange, taskCount }: NavProps) {
       </div>
       <nav aria-label="Main" className="mt-7 flex flex-col gap-1 px-3">
         {NAV_ITEMS.map((item) => {
-          const active = view === item.key;
           const Icon = item.icon;
           return (
-            <button
-              key={item.key}
-              type="button"
-              aria-current={active ? 'page' : undefined}
-              onClick={() => onViewChange(item.key)}
-              className={`flex cursor-pointer items-center gap-2.5 rounded-lg border-none px-3 py-2 text-sm font-semibold transition-colors duration-150 ${
-                active ? 'bg-ink text-white' : 'bg-transparent text-ink/75 hover:bg-ink/5 hover:text-ink'
-              }`}
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                `flex items-center gap-2.5 rounded-lg border-none px-3 py-2 text-sm font-semibold no-underline transition-colors duration-150 ${
+                  isActive
+                    ? 'bg-ink text-white'
+                    : 'bg-transparent text-ink/75 hover:bg-ink/5 hover:text-ink'
+                }`
+              }
             >
-              <Icon size={17} aria-hidden />
-              {item.label}
-              {item.key === 'tasks' && <CountChip count={taskCount} active={active} />}
-            </button>
+              {({ isActive }) => (
+                <>
+                  <Icon size={17} aria-hidden />
+                  {item.label}
+                  {item.to === TASKS_PATH && <CountChip count={taskCount} active={isActive} />}
+                </>
+              )}
+            </NavLink>
           );
         })}
       </nav>
@@ -75,32 +80,32 @@ export default function Sidebar({ view, onViewChange, taskCount }: NavProps) {
 }
 
 /** Same navigation, compact for small screens. */
-export function TopNav({ view, onViewChange, taskCount }: NavProps) {
+export function TopNav({ taskCount }: NavProps) {
   return (
     <header className="sticky top-0 z-30 border-b border-ink/10 bg-white/90 px-5 py-3 backdrop-blur md:hidden">
       <Brand />
       <nav aria-label="Main" className="mt-3 grid grid-cols-2 gap-1 rounded-lg bg-paper p-1">
         {NAV_ITEMS.map((item) => {
-          const active = view === item.key;
           const Icon = item.icon;
           return (
-            <button
-              key={item.key}
-              type="button"
-              aria-current={active ? 'page' : undefined}
-              onClick={() => onViewChange(item.key)}
-              className={`flex cursor-pointer items-center justify-center gap-2 rounded-md border-none px-3 py-1.5 text-sm font-semibold transition-colors duration-150 ${
-                active ? 'bg-white text-ink shadow-sm' : 'bg-transparent text-ink/65 hover:text-ink'
-              }`}
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                `flex items-center justify-center gap-2 rounded-md border-none px-3 py-1.5 text-sm font-semibold no-underline transition-colors duration-150 ${
+                  isActive ? 'bg-white text-ink shadow-sm' : 'bg-transparent text-ink/65 hover:text-ink'
+                }`
+              }
             >
-              <Icon size={16} aria-hidden />
-              {item.label}
-              {item.key === 'tasks' && taskCount !== null && (
-                <span className="rounded-full bg-ink/10 px-1.5 py-0.5 text-[11px] tabular-nums">
-                  {taskCount}
-                </span>
+              {({ isActive }) => (
+                <>
+                  <Icon size={16} aria-hidden />
+                  {item.label}
+                  {item.to === TASKS_PATH && <CountChip count={taskCount} active={isActive} />}
+                </>
               )}
-            </button>
+            </NavLink>
           );
         })}
       </nav>

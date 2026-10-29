@@ -32,7 +32,7 @@ export const createTaskSchema = z.strictObject({
   title: titleSchema,
   description: descriptionSchema.optional(),
   priority: prioritySchema.optional(),
-  priority: statusSchema.optional(),
+  status: statusSchema.optional(),
 });
 
 export const updateTaskSchema = z

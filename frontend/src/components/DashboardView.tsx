@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import DashboardStats from './DashboardStats';
 import { TASK_STATUS_LABELS } from '../types';
 import type { DashboardStats as DashboardStatsData, Task, TaskStatus } from '../types';
@@ -15,7 +17,6 @@ interface Props {
   latest: Task[];
   latestLoading: boolean;
   latestError: string | null;
-  onViewAll(): void;
 }
 
 function formatDate(isoDate: string): string {
@@ -33,7 +34,6 @@ export default function DashboardView({
   latest,
   latestLoading,
   latestError,
-  onViewAll,
 }: Props) {
   return (
     <div>
@@ -42,13 +42,12 @@ export default function DashboardView({
       <section className="mt-7">
         <div className="flex items-baseline justify-between gap-4">
           <h2 className="m-0 font-display text-lg font-bold tracking-tight">Latest tasks</h2>
-          <button
-            type="button"
-            className="cursor-pointer border-none bg-transparent p-0 text-sm font-semibold text-ink hover:underline hover:underline-offset-4"
-            onClick={onViewAll}
+          <Link
+            to="/tasks"
+            className="cursor-pointer border-none bg-transparent p-0 text-sm font-semibold text-ink no-underline hover:underline hover:underline-offset-4"
           >
             View all tasks
-          </button>
+          </Link>
         </div>
 
         <ul className="m-0 mt-3 list-none overflow-hidden rounded-xl border border-ink/10 bg-white p-0">

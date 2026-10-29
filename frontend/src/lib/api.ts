@@ -40,7 +40,7 @@ interface ApiResult<T> {
   meta?: unknown;
 }
 
-const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '');
+const API_URL = (import.meta.env.API_URL ?? 'http://localhost:5000').replace(/\/+$/, '');
 
 const FALLBACK_MESSAGES: Record<number, string> = {
   0: 'Cannot reach the server. Check that the API is running and try again.',

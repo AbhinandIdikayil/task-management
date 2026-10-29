@@ -1,18 +1,17 @@
 import { useCallback, useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
 import ConfirmDialog from './components/ConfirmDialog';
 import DashboardView from './components/DashboardView';
-import Pagination from './components/Pagination';
 import Sidebar, { TopNav } from './components/Sidebar';
 import TaskFormModal from './components/TaskFormModal';
-import TaskList from './components/TaskList';
-import TaskToolbar from './components/TaskToolbar';
+import TasksView from './components/TasksView';
 import Toast, { type ToastMessage } from './components/Toast';
 import { useDashboard } from './hooks/useDashboard';
 import { useLatestTasks } from './hooks/useLatestTasks';
 import { useTasks } from './hooks/useTasks';
 import { createTask, deleteTask, updateTask } from './services/tasks';
-import type { Task, TaskPatch, TaskPayload, ViewName } from './types';
+import type { Task, TaskPatch, TaskPayload } from './types';
 
 interface ToastState {
   id: number;
@@ -20,7 +19,9 @@ interface ToastState {
 }
 
 export default function App() {
-  const [view, setView] = useState<ViewName>('dashboard');
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const isDashboard = pathname === '/';
 
   // Bumped after every mutation so the task list, dashboard and latest feed refetch.
   const [refreshKey, setRefreshKey] = useState(0);
@@ -32,7 +33,7 @@ export default function App() {
   const [deleteBusy, setDeleteBusy] = useState(false);
 
   const dashboard = useDashboard(refreshKey);
-  const latest = useLatestTasks(refreshKey, view === 'dashboard');
+  const latest = useLatestTasks(refreshKey, isDashboard);
   const {
     filters,
     items,
@@ -40,7 +41,6 @@ export default function App() {
     loading,
     error,
     updateFilters,
-    goToPage,
     reload,
   } = useTasks(refreshKey);
 
@@ -55,6 +55,7 @@ export default function App() {
       } else {
         // Create mode always sends the full body (guaranteed by the form modal).
         await createTask(payload as TaskPayload);
+        navigate('/tasks');
       }
 
       showToast({
@@ -68,7 +69,7 @@ export default function App() {
       }
       setRefreshKey((key) => key + 1);
     },
-    [showToast, updateFilters],
+    [navigate, showToast, updateFilters],
   );
 
   const handleDeleteConfirm = useCallback(async () => {
@@ -92,14 +93,7 @@ export default function App() {
     }
   }, [deletingTask, showToast]);
 
-  const hasFilters =
-    filters.search !== '' || filters.status !== '' || filters.priority !== '';
-
-  const navProps = {
-    view,
-    onViewChange: setView,
-    taskCount: dashboard.stats?.total ?? null,
-  };
+  const navProps = { taskCount: dashboard.stats?.total ?? null };
 
   return (
     <div className="flex min-h-dvh">
@@ -109,46 +103,40 @@ export default function App() {
         <TopNav {...navProps} />
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-5 pb-16 pt-6 md:pt-8">
-          {view === 'dashboard' ? (
-            <DashboardView
-              stats={dashboard.stats}
-              statsLoading={dashboard.loading}
-              statsError={dashboard.error}
-              latest={latest.tasks}
-              latestLoading={latest.loading}
-              latestError={latest.error}
-              onViewAll={() => setView('tasks')}
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <DashboardView
+                  stats={dashboard.stats}
+                  statsLoading={dashboard.loading}
+                  statsError={dashboard.error}
+                  latest={latest.tasks}
+                  latestLoading={latest.loading}
+                  latestError={latest.error}
+                />
+              }
             />
-          ) : (
-            <>
-              <section className="mb-5 flex flex-wrap items-center justify-between gap-4">
-                <h2 className="m-0 font-display text-2xl font-extrabold tracking-tight">Tasks</h2>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => setCreateOpen(true)}
-                >
-                  + Add task
-                </button>
-              </section>
-
-              <TaskToolbar filters={filters} onChange={updateFilters} />
-
-              <TaskList
-                tasks={items}
-                loading={loading}
-                error={error}
-                hasFilters={hasFilters}
-                onEdit={setEditingTask}
-                onDelete={setDeletingTask}
-                onReload={reload}
-                onClearFilters={() => updateFilters({ search: '', status: '', priority: '' })}
-                onCreate={() => setCreateOpen(true)}
-              />
-
-              <Pagination meta={meta} onPageChange={goToPage} />
-            </>
-          )}
+            <Route
+              path="/tasks"
+              element={
+                <TasksView
+                  filters={filters}
+                  onFiltersChange={updateFilters}
+                  items={items}
+                  meta={meta}
+                  loading={loading}
+                  error={error}
+                  onReload={reload}
+                  onClearFilters={() => updateFilters({ search: '', status: '', priority: '' })}
+                  onCreate={() => setCreateOpen(true)}
+                  onEdit={setEditingTask}
+                  onDelete={setDeletingTask}
+                />
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </main>
       </div>
 

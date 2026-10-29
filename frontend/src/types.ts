@@ -44,9 +44,6 @@ export interface TaskFilters {
   page: number;
 }
 
-/** Top-level views reachable from the sidebar. */
-export type ViewName = 'dashboard' | 'tasks';
-
 export interface PaginationMeta {
   total: number;
   page: number;

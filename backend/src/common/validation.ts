@@ -2,6 +2,7 @@ import type { RequestHandler } from 'express';
 import type { ZodError, ZodType } from 'zod';
 
 import { ValidationError, type ErrorDetail } from './errors';
+import type { ValidatedRequestData } from '../types/express';
 
 export type ValidationTarget = 'body' | 'query' | 'params';
 
@@ -30,7 +31,7 @@ export function formatZodIssues(error: ZodError): ErrorDetail[] {
  */
 export const validate = (schemas: RequestValidationSchema): RequestHandler => {
   return (req, _res, next) => {
-    const validated: NonNullable<typeof req.validated> = { ...req.validated };
+    const validated: ValidatedRequestData = { ...req.validated };
 
     for (const target of ['params', 'query', 'body'] as const) {
       const schema = schemas[target];
